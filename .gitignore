@@ -1,5 +1,7 @@
 ﻿/.idea
 /.vs
 
+/packages
+
 /PDFSplitter/bin
 /PDFSplitter/obj
