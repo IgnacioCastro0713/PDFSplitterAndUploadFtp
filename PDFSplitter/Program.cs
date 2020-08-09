@@ -30,7 +30,8 @@ namespace PDFSplitter
             pdfDocument.Close();
             documents.Clear();
 
-            ftpClient.UploadFiles(LocalOutput, string.Empty);
+            ftpClient.UploadFiles(LocalOutput);
+            //Directory.Delete($"{LocalOutput}/output");
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Finished!");

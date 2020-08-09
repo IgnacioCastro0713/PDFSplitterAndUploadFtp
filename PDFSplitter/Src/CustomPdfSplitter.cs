@@ -10,29 +10,23 @@ namespace PDFSplitter.Src
     {
         private readonly string _destination;
         private int _pageNumber = 1;
+        private static readonly int MaxFilesByDirectory = int.Parse(ConfigurationManager.AppSettings["MaxFilesByDirectory"]);
 
-        private static readonly int MaxFilesByDirectory =
-            int.Parse(ConfigurationManager.AppSettings["MaxFilesByDirectory"]);
-
-
-        public CustomPdfSplitter(PdfDocument pdfDocument, string destination) : base(pdfDocument) =>
-            _destination = destination;
+        public CustomPdfSplitter(PdfDocument pdfDocument, string destination) : base(pdfDocument) => _destination = destination;
 
         protected override PdfWriter GetNextPdfWriter(PageRange documentPageRange)
         {
             try
             {
                 var page = _pageNumber++;
-                var folder = page % MaxFilesByDirectory == 0
-                    ? page / MaxFilesByDirectory
-                    : page / MaxFilesByDirectory + 1;
+                var folder = page % MaxFilesByDirectory == 0 ? page / MaxFilesByDirectory : page / MaxFilesByDirectory + 1;
 
-                if (!Directory.Exists($"{_destination}folder{folder}"))
+                if (!Directory.Exists($"{_destination}/output/part{folder}"))
                 {
-                    Directory.CreateDirectory($"{_destination}folder{folder}");
+                    Directory.CreateDirectory($"{_destination}/output/part{folder}");
                 }
 
-                return new PdfWriter($"{_destination}folder{folder}\\page_{page}.pdf");
+                return new PdfWriter($"{_destination}/output/part{folder}/page_{page}.pdf");
             }
             catch (FileNotFoundException e)
             {
