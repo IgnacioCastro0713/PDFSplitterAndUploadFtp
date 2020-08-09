@@ -24,7 +24,7 @@ namespace PDFSplitter.Src
         {
             try
             {
-                var basePath = $"{_destination}/output/{Regex.Replace(_folderByFile, ".pdf", "", RegexOptions.IgnoreCase)}";
+                var basePath = $"{_destination}/{Regex.Replace(_folderByFile, ".pdf", "", RegexOptions.IgnoreCase)}";
                 var page = _pageNumber++;
                 var folder = page % MaxFilesByDirectory == 0 ? page / MaxFilesByDirectory : page / MaxFilesByDirectory + 1;
 

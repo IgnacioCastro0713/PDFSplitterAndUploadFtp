@@ -10,7 +10,7 @@ namespace PDFSplitter
     class Program
     {
         private static readonly string OriginPath = ConfigurationManager.AppSettings["OriginPath"];
-        private static readonly string LocalOutput = ConfigurationManager.AppSettings["LocalOutput"];
+        private static readonly string LocalOutput = $"{ConfigurationManager.AppSettings["LocalOutput"]}/output";
         private static readonly int MaxPageCount = int.Parse(ConfigurationManager.AppSettings["MaxPageCount"]);
 
         private static readonly string UserName = ConfigurationManager.AppSettings["UserName"];
@@ -28,12 +28,13 @@ namespace PDFSplitter
                 var documents = new CustomPdfSplitter(pdfDocument, LocalOutput, Path.GetFileName(file)).SplitByPageCount(MaxPageCount);
                 
                 foreach (var document in documents) document.Close();
+                
                 pdfDocument.Close();
                 documents.Clear();
             }
             
             ftpClient.UploadFiles(LocalOutput);
-            //Directory.Delete($"{LocalOutput}/output");
+            //Directory.Delete(LocalOutput);
             
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Finished!");
