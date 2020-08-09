@@ -17,10 +17,21 @@ namespace PDFSplitter
         static void Main(string[] args)
         {
             var ftpClient = new FtpClient(UserName, Password, FtpAddress);
+            
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine("Searching files...");
             var filesPath = Directory.GetFiles(OriginPath, "*.pdf");
-
+            
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.WriteLine("Splitting PDF files");
             Splitter.SplitPdfFiles(filesPath);
+            
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("uploading files to FTP");
             ftpClient.UploadFiles(LocalOutput);
+            
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Deleting local files");
             Directory.Delete(LocalOutput, true);
             
             Console.ForegroundColor = ConsoleColor.Green;
