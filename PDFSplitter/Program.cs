@@ -3,6 +3,7 @@ using System.IO;
 using iText.Kernel.Pdf;
 using PDFSplitter.Src;
 using System.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace PDFSplitter
 {
@@ -18,20 +19,22 @@ namespace PDFSplitter
 
         static void Main(string[] args)
         {
-            var pdfDocument = new PdfDocument(new PdfReader(new FileStream(OriginPath, FileMode.Open)));
-            var documents = new CustomPdfSplitter(pdfDocument, LocalOutput).SplitByPageCount(MaxPageCount);
             var ftpClient = new FtpClient(UserName, Password, FtpAddress);
-
-            foreach (var document in documents)
+            var filesPath = Directory.GetFiles(OriginPath, "*.pdf", SearchOption.AllDirectories);
+            
+            foreach (var file in filesPath)
             {
-                document.Close();
+                var pdfDocument = new PdfDocument(new PdfReader(new FileStream(file, FileMode.Open)));
+                var documents = new CustomPdfSplitter(pdfDocument, LocalOutput, Path.GetFileName(file)).SplitByPageCount(MaxPageCount);
+                
+                foreach (var document in documents) document.Close();
+                pdfDocument.Close();
+                documents.Clear();
             }
-
-            pdfDocument.Close();
-            documents.Clear();
-
-            ftpClient.UploadFiles(LocalOutput, string.Empty);
-
+            
+            ftpClient.UploadFiles(LocalOutput);
+            //Directory.Delete($"{LocalOutput}/output");
+            
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Finished!");
         }

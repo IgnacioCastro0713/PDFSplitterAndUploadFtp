@@ -88,7 +88,7 @@ namespace PDFSplitter.Src
             }
         }
 
-        public void UploadFiles(string dirPath, string uploadPath)
+        public void UploadFiles(string dirPath, string uploadPath = "")
         {
             var files = Directory.GetFiles(dirPath, "*.pdf");
             var subDirs = Directory.GetDirectories(dirPath);
@@ -100,7 +100,6 @@ namespace PDFSplitter.Src
 
             foreach (var subDir in subDirs)
             {
-                
                 CreateDirectory($"{uploadPath}/{Path.GetFileName(subDir)}");   
                 UploadFiles(subDir, $"{uploadPath}/{Path.GetFileName(subDir)}");
             }
