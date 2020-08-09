@@ -8,24 +8,24 @@ namespace PDFSplitter.Src
     {
         private readonly string _username;
         private readonly string _password;
-        private readonly string _address;
+        private readonly string _host;
         private FtpWebRequest _ftpRequest;
         private FtpWebResponse _ftpResponse;
         private Stream _ftpStream;
         private const int BufferSize = 2048;
 
-        public FtpClient(string username, string password, string address)
+        public FtpClient(string username, string password, string host)
         {
             _username = username;
             _password = password;
-            _address = address;
+            _host = host;
         }
 
         private void Upload(string remoteFile, string localFile)
         {
             try
             {
-                _ftpRequest = (FtpWebRequest) WebRequest.Create($"{_address}/{remoteFile}");
+                _ftpRequest = (FtpWebRequest) WebRequest.Create($"{_host}/{remoteFile}");
                 _ftpRequest.Credentials = new NetworkCredential(_username, _password);
                 _ftpRequest.UseBinary = true;
                 _ftpRequest.UsePassive = true;
@@ -62,7 +62,7 @@ namespace PDFSplitter.Src
         {
             try
             {
-                _ftpRequest = (FtpWebRequest) WebRequest.Create($"{_address}/{newDirectory}");
+                _ftpRequest = (FtpWebRequest) WebRequest.Create($"{_host}/{newDirectory}");
                 _ftpRequest.Credentials = new NetworkCredential(_username, _password);
                 _ftpRequest.UseBinary = true;
                 _ftpRequest.UsePassive = true;
