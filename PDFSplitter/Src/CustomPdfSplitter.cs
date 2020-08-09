@@ -21,12 +21,10 @@ namespace PDFSplitter.Src
                 var page = _pageNumber++;
                 var folder = page % MaxFilesByDirectory == 0 ? page / MaxFilesByDirectory : page / MaxFilesByDirectory + 1;
 
-                if (!Directory.Exists($"{_destination}/output/part{folder}"))
-                {
-                    Directory.CreateDirectory($"{_destination}/output/part{folder}");
-                }
+                if (!Directory.Exists($"{_destination}/part{folder}"))
+                    Directory.CreateDirectory($"{_destination}/part{folder}");
 
-                return new PdfWriter($"{_destination}/output/part{folder}/page_{page}.pdf");
+                return new PdfWriter($"{_destination}/part{folder}/page_{page}.pdf");
             }
             catch (FileNotFoundException e)
             {
