@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Configuration;
+﻿using System.Configuration;
 using System.IO;
 using iText.Kernel.Pdf;
 
@@ -7,19 +6,27 @@ namespace PDFSplitter.Src
 {
     public static class Splitter
     {
+        private static readonly string UserName = ConfigurationManager.AppSettings["UserName"];
+        private static readonly string Password = ConfigurationManager.AppSettings["Password"];
+        private static readonly string FtpAddress = ConfigurationManager.AppSettings["FtpAddress"];
         private static readonly int MaxPageCount = int.Parse(ConfigurationManager.AppSettings["MaxPageCount"]);
 
-        public static void SplitPdfFiles(IEnumerable<string> files)
+        public static void SplitPdfFiles(string path)
         {
-            foreach (var file in files) // only one
-            {
-                var pdfDocument = new PdfDocument(new PdfReader(new FileStream(file, FileMode.Open)));
-                var documents = new CustomPdfSplitter(pdfDocument).SplitByPageCount(MaxPageCount);
-                
-                foreach (var document in documents) document.Close();
+            var localPath = Path.GetDirectoryName(path);
 
-                pdfDocument.Close();
-            }
+            var pdfDocument = new PdfDocument(new PdfReader(new FileStream(path, FileMode.Open)));
+            var documents = new CustomPdfSplitter(pdfDocument, localPath).SplitByPageCount(MaxPageCount);
+            foreach (var document in documents) document.Close();
+            pdfDocument.Close();
+
+            
+            var ftpClient = new FtpClient(UserName, Password, FtpAddress);
+            ftpClient.DeleteFtpFiles(FtpAddress);
+            ftpClient.DeleteDirectories();
+            ftpClient.UploadFilesToFtp(localPath + "/temp");
+            
+            Directory.Delete(localPath + "/temp", true);
         }
     }
 }

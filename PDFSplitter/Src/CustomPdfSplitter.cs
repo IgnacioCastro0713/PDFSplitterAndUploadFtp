@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Configuration;
 using System.IO;
-using System.Text.RegularExpressions;
 using iText.Kernel.Pdf;
 using iText.Kernel.Utils;
 
@@ -9,22 +8,18 @@ namespace PDFSplitter.Src
 {
     public class CustomPdfSplitter : PdfSplitter
     {
+        private readonly string _localPath;
         private int _pageNumber = 1;
 
-        private static readonly int MaxFilesByDirectory =
-            int.Parse(ConfigurationManager.AppSettings["MaxFilesByDirectory"]);
+        private static readonly int MaxFilesByDirectory = int.Parse(ConfigurationManager.AppSettings["MaxFilesByDirectory"]);
 
-        private static readonly string LocalOutput = $"{ConfigurationManager.AppSettings["LocalOutput"]}/output";
-
-        public CustomPdfSplitter(PdfDocument pdfDocument) : base(pdfDocument)
-        {
-        }
+        public CustomPdfSplitter(PdfDocument pdfDocument, string localPath) : base(pdfDocument) => _localPath = localPath;
 
         protected override PdfWriter GetNextPdfWriter(PageRange documentPageRange)
         {
             try
             {
-                var basePath = $"{LocalOutput}/";
+                var basePath = $"{_localPath}/temp/";
                 var page = _pageNumber++;
                 var folder = page % MaxFilesByDirectory == 0
                     ? page / MaxFilesByDirectory
