@@ -9,23 +9,26 @@ namespace PDFSplitter.Src
 {
     public class CustomPdfSplitter : PdfSplitter
     {
-        private readonly string _folderByFile;
         private int _pageNumber = 1;
-        private static readonly int MaxFilesByDirectory = int.Parse(ConfigurationManager.AppSettings["MaxFilesByDirectory"]);
+
+        private static readonly int MaxFilesByDirectory =
+            int.Parse(ConfigurationManager.AppSettings["MaxFilesByDirectory"]);
+
         private static readonly string LocalOutput = $"{ConfigurationManager.AppSettings["LocalOutput"]}/output";
-        
-        public CustomPdfSplitter(PdfDocument pdfDocument, string folderByFile) : base(pdfDocument)
+
+        public CustomPdfSplitter(PdfDocument pdfDocument) : base(pdfDocument)
         {
-            _folderByFile = folderByFile;
         }
 
         protected override PdfWriter GetNextPdfWriter(PageRange documentPageRange)
         {
             try
             {
-                var basePath = $"{LocalOutput}/{Regex.Replace(_folderByFile, ".pdf", "", RegexOptions.IgnoreCase)}";
+                var basePath = $"{LocalOutput}/";
                 var page = _pageNumber++;
-                var folder = page % MaxFilesByDirectory == 0 ? page / MaxFilesByDirectory : page / MaxFilesByDirectory + 1;
+                var folder = page % MaxFilesByDirectory == 0
+                    ? page / MaxFilesByDirectory
+                    : page / MaxFilesByDirectory + 1;
 
                 if (!Directory.Exists($"{basePath}/part{folder}"))
                     Directory.CreateDirectory($"{basePath}/part{folder}");

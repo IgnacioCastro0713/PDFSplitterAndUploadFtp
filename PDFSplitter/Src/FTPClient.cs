@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 
@@ -47,6 +48,7 @@ namespace PDFSplitter.Src
                 {
                     Console.WriteLine(ex.ToString());
                 }
+
                 localFileStream.Close();
                 _ftpStream.Close();
                 _ftpRequest = null;
@@ -69,26 +71,125 @@ namespace PDFSplitter.Src
                 _ftpRequest.KeepAlive = true;
                 _ftpRequest.Method = WebRequestMethods.Ftp.MakeDirectory;
                 _ftpResponse = (FtpWebResponse) _ftpRequest.GetResponse();
-                
+
                 var ftpStream = _ftpResponse.GetResponseStream();
                 ftpStream?.Close();
 
                 _ftpResponse.Close();
                 _ftpRequest = null;
             }
-            catch (WebException  ex)
+            catch (WebException ex)
             {
-                var response = (FtpWebResponse)ex.Response;
+                var response = (FtpWebResponse) ex.Response;
                 if (response.StatusCode == FtpStatusCode.ActionNotTakenFileUnavailable)
                 {
                     response.Close();
                     return;
                 }
+
                 response.Close();
             }
         }
 
-        public void UploadFiles(string dirPath, string uploadPath = "")
+        private IEnumerable<string> ListDirectories()
+        {
+            _ftpRequest = (FtpWebRequest) WebRequest.Create(_host);
+            _ftpRequest.Credentials = new NetworkCredential(_username, _password);
+            _ftpRequest.Method = WebRequestMethods.Ftp.ListDirectory;
+            _ftpResponse = (FtpWebResponse) _ftpRequest.GetResponse();
+            _ftpStream = _ftpResponse.GetResponseStream();
+            var reader = new StreamReader(_ftpStream);
+            var result = new List<string>();
+
+            while (!reader.EndOfStream)
+            {
+                result.Add(reader.ReadLine());
+            }
+
+            reader.Close();
+            _ftpResponse.Close();
+
+            return result;
+        }
+
+        public void DeleteDirectories()
+        {
+            var directories = ListDirectories();
+
+            foreach (var directory in directories)
+            {
+                var path = _host + "/" + directory;
+                _ftpRequest = (FtpWebRequest) WebRequest.Create(path);
+                _ftpRequest.Credentials = new NetworkCredential(_username, _password);
+                _ftpRequest.Method = WebRequestMethods.Ftp.RemoveDirectory;
+                _ftpResponse = (FtpWebResponse)_ftpRequest.GetResponse();
+                _ftpStream = _ftpResponse.GetResponseStream();
+                var sr = new StreamReader(_ftpStream);
+                sr.ReadToEnd();
+                sr.Close();
+                _ftpStream.Close();
+                _ftpResponse.Close();
+            }
+        }
+
+        public void DeleteFtpFiles(string ftpAddress)
+        {
+            try
+            {
+                _ftpRequest = (FtpWebRequest) WebRequest.Create(ftpAddress);
+                _ftpRequest.Credentials = new NetworkCredential(_username, _password);
+                _ftpRequest.UsePassive = true;
+                _ftpRequest.UseBinary = true;
+                _ftpRequest.KeepAlive = false;
+                _ftpRequest.Method = WebRequestMethods.Ftp.ListDirectory;
+                var response = (FtpWebResponse) _ftpRequest.GetResponse();
+
+                var responseStream = response.GetResponseStream();
+                var files = new List<string>();
+                var reader = new StreamReader(responseStream);
+                while (!reader.EndOfStream)
+                    files.Add(reader.ReadLine());
+                reader.Close();
+                responseStream.Dispose();
+
+                foreach (var fileName in files)
+                {
+                    var parentDirectory = "";
+                    if (fileName.Contains(".pdf"))
+                    {
+                        var ftpPath = ftpAddress + fileName;
+                        var request = (FtpWebRequest) WebRequest.Create(ftpPath);
+                        request.UsePassive = true;
+                        request.UseBinary = true;
+                        request.KeepAlive = false;
+                        request.Credentials = new NetworkCredential(_username, _password);
+                        request.Method = WebRequestMethods.Ftp.DeleteFile;
+                        var ftpWebResponse = (FtpWebResponse) request.GetResponse();
+                        ftpWebResponse.Close();
+                    }
+                    else
+                    {
+                        parentDirectory += $"{fileName}/";
+                        try
+                        {
+                            DeleteFtpFiles($"{ftpAddress}/{parentDirectory}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                _ftpRequest.Abort();
+                Console.WriteLine(e);
+            }
+        }
+
+
+        public void UploadFilesToFtp(string dirPath, string uploadPath = "")
         {
             var files = Directory.GetFiles(dirPath, "*.pdf");
             var subDirs = Directory.GetDirectories(dirPath);
@@ -100,8 +201,8 @@ namespace PDFSplitter.Src
 
             foreach (var subDir in subDirs)
             {
-                CreateDirectory($"{uploadPath}/{Path.GetFileName(subDir)}");   
-                UploadFiles(subDir, $"{uploadPath}/{Path.GetFileName(subDir)}");
+                CreateDirectory($"{uploadPath}/{Path.GetFileName(subDir)}");
+                UploadFilesToFtp(subDir, $"{uploadPath}/{Path.GetFileName(subDir)}");
             }
         }
     }
